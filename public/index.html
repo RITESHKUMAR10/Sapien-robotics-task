@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doodle Duel</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8E%A8%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="home" class="screen">
+  <div class="card home-card">
+    <h1>🎨 Doodle Duel</h1>
+    <p class="muted">Draw it. Guess it. Real-time multiplayer.</p>
+
+    <label>Your name
+      <input id="name" maxlength="20" placeholder="e.g. Ritesh Kumar" autocomplete="off">
+    </label>
+
+    <div class="tabs">
+      <button type="button" data-tab="create" class="active">Create room</button>
+      <button type="button" data-tab="join">Join room</button>
+    </div>
+
+    <form id="createForm">
+      <div class="row">
+        <label>Rounds <input id="rounds" type="number" min="1" max="10" value="3"></label>
+        <label>Draw time (sec) <input id="drawTime" type="number" min="20" max="180" value="80"></label>
+      </div>
+      <label>Custom words <span class="muted">(optional, comma or line separated, min 3)</span>
+        <textarea id="words" rows="3" placeholder="Leave empty to use the built-in list"></textarea>
+      </label>
+      <button class="primary" type="submit">Create room</button>
+    </form>
+
+    <form id="joinForm" class="hidden">
+      <label>Room code <input id="code" maxlength="8" placeholder="ABCDE" autocomplete="off"></label>
+      <button class="primary" type="submit">Join room</button>
+    </form>
+
+    <p id="homeMsg" class="error"></p>
+  </div>
+</div>
+
+<div id="game" class="screen hidden">
+  <header>
+    <div class="head-left">
+      <b>Room <span id="roomCode"></span></b>
+      <button id="copyLink" type="button">Copy invite link</button>
+      <button id="leaveBtn" type="button" class="ghost">Leave</button>
+    </div>
+    <div id="hint" class="hint"></div>
+    <div class="head-right">
+      <span id="roundInfo"></span>
+      <span id="ping" class="muted"></span>
+      <span id="timer" class="timer">–</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside id="players" class="panel"></aside>
+
+    <section class="center">
+      <div class="stage">
+        <canvas id="canvas" width="800" height="600"></canvas>
+        <div id="overlay" class="overlay hidden"></div>
+      </div>
+      <div id="tools" class="tools disabled">
+        <div class="group">
+          <button data-tool="pen" class="tool active" title="Pen">✏️</button>
+          <button data-tool="eraser" class="tool" title="Eraser">🧽</button>
+          <button data-tool="fill" class="tool" title="Fill">🪣</button>
+        </div>
+        <div id="palette" class="group palette"></div>
+        <div class="group sizes">
+          <button data-size="3" class="size" title="Thin"><i style="width:4px;height:4px"></i></button>
+          <button data-size="7" class="size active" title="Medium"><i style="width:8px;height:8px"></i></button>
+          <button data-size="14" class="size" title="Thick"><i style="width:14px;height:14px"></i></button>
+          <button data-size="26" class="size" title="Huge"><i style="width:22px;height:22px"></i></button>
+        </div>
+        <div class="group">
+          <button id="undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+          <button id="clear" title="Clear canvas">🗑 Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel chat">
+      <div id="chatLog" class="chat-log"></div>
+      <form id="chatForm">
+        <input id="chatInput" maxlength="100" autocomplete="off" placeholder="Type your guess…">
+        <button type="submit">Send</button>
+      </form>
+    </aside>
+  </div>
+
+  <div id="banner" class="banner hidden"></div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

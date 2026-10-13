@@ -1,0 +1,13 @@
+{
+  "name": "doodle-duel",
+  "version": "1.0.0",
+  "description": "Real-time multiplayer drawing & guessing game (Pictionary / skribbl.io style)",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node test/smoke.js",
+    "loadtest": "node loadtest/load.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}

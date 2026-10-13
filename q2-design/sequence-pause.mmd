@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  participant H as Host client
+  participant GH as Gateway (host's)
+  participant R as Room actor (owner node)
+  participant RD as Redis snapshot
+  participant BUS as NATS room topic
+  participant GN as Gateways x ~50 (listener sockets)
+  participant L as 5,000 listener clients
+
+  H->>GH: pause {cmdId, baseVersion=n}
+  GH->>R: command (auth + rate limit passed)
+  Note over R: Serialised in the actor. Check host, epoch, version.<br/>pos = P0 + (now - T0). New state: playing=false, P0=pos, T0=now, version=n+1
+  par fan-out first
+    R->>BUS: publish state(n+1, epoch, serverTime)
+  and persist in parallel
+    R->>RD: write snapshot (write-behind, ~ms)
+  end
+  BUS->>GN: state(n+1) to every gateway that has members
+  GN->>L: one ~200 byte frame per socket (about 100 per gateway)
+  Note over L: audio.pause() immediately, show frozen position P0.<br/>No per-listener ack (would be 5,000 replies)
+  GN-->>H: same state frame = confirmation (optimistic UI settles, or rolls back on reject)
+  L-->>BUS: 1% sampled telemetry: applied_at - serverTime
+  Note over H,L: Budget: host to gateway ~30 ms, actor + bus under 5 ms, gateway to listener 20-100 ms.<br/>p95 end-to-end about 150 ms. Resume is scheduled: play {startAt = now + 600 ms}, so everyone starts together.

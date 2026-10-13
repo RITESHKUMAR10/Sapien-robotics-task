@@ -1,0 +1,59 @@
+flowchart TB
+  subgraph CL["Clients (web / iOS / Android)"]
+    PL["Player: ABR audio + sync engine"]
+  end
+
+  subgraph EDGE["Edge (per region)"]
+    DNS["GeoDNS + global LB"]
+    CDN["Multi-CDN + origin shield"]
+    API["API gateway: auth, rate limits"]
+    GW["WebSocket gateways x ~60 (stateless)"]
+  end
+
+  subgraph SVC["Services (per region)"]
+    CAT["Catalogue API"]
+    SRCH["Search / suggest API"]
+    PLAY["Playback API: entitlements, signed manifests"]
+    PLS["Playlist and library service"]
+    ROOM["Room service: one actor per room"]
+    EVT["Event collector"]
+  end
+
+  subgraph DATA["Data"]
+    S3[("Object store: audio segments, masters")]
+    PG[("Postgres: catalogue, users")]
+    OS[("OpenSearch: tracks, artists, suggest")]
+    RD[("Redis: room snapshots, hot cache")]
+    ET[("etcd: shard map and leases")]
+    WC[("Wide-column DB: playlists, recent plays")]
+    KF[["Kafka: play and room events"]]
+    CH[("ClickHouse: analytics")]
+    LG[("S3 ledger: immutable royalty events")]
+  end
+
+  subgraph ING["Release pipeline"]
+    IN["Label ingest (DDEX)"] --> TC["Validate, loudness-normalise, transcode"] --> PK["Package CMAF segments"] --> PUB["Release scheduler"]
+  end
+
+  PL -->|"HTTPS"| DNS
+  DNS --> API
+  PL -->|"audio segments"| CDN
+  CDN -->|"miss"| S3
+  PL <-->|"WebSocket: room control + clock sync"| GW
+  API --> CAT & SRCH & PLAY & PLS
+  CAT --> PG
+  SRCH --> OS
+  PLS --> WC
+  PLAY --> PG
+  GW <-->|"commands up, state down (NATS)"| ROOM
+  ROOM <--> RD
+  ROOM <--> ET
+  PL -->|"play events"| EVT
+  ROOM --> KF
+  EVT --> KF
+  KF --> CH
+  KF --> LG
+  PK --> S3
+  PUB --> PG
+  PUB --> OS
+  PUB -.->|"pre-warm"| CDN
